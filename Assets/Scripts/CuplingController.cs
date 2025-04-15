@@ -1,11 +1,11 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class CuplingController : MonoBehaviour
 {
     public Transform StaticCupling;
     public Transform MovingCupling;
-    public GameObject Xray;
     private Vector3 PrevPos;
     public Transform Handle;
     public Vector3 TargetPosition;
@@ -18,6 +18,14 @@ public class CuplingController : MonoBehaviour
     private bool isConnected = false;
     private Coroutine movementCoroutine;
     private Coroutine handleCoroutine;
+
+    [Header("Target Material")]
+    public Material targetMaterial;
+    public bool xrayOn = false;
+    [Header("World Cutoff Values")]
+    public float cutoffX = -999f;
+    public float cutoffY = -1f;
+    public float cutoffZ = -999f;
 
     void Start()
     {
@@ -37,8 +45,21 @@ public class CuplingController : MonoBehaviour
 
     public void ToggleXray()
     {
-        var ray = Xray.GetComponent<CrossSectionGlassController>();
-        ray.ToggleXRay(!ray.enable);
+        if (targetMaterial != null)
+        {
+            if (targetMaterial.GetFloat("_CutoffX") == cutoffX )
+            {
+                targetMaterial.SetFloat("_CutoffX", 2.95f);
+                targetMaterial.SetFloat("_CutoffY", cutoffY);
+                targetMaterial.SetFloat("_CutoffZ", cutoffZ);
+            }
+            else
+            {
+                targetMaterial.SetFloat("_CutoffX", cutoffX);
+                targetMaterial.SetFloat("_CutoffY", cutoffY);
+                targetMaterial.SetFloat("_CutoffZ", cutoffZ);
+            }
+        }
     }
 
     public void MoveLeft()

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.45114118, g: 0.50092345, b: 0.5739115, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -505,12 +505,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!4 &249343311 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2101435021, guid: bef4d85d927c4ce42b18436dd2582a1e,
-    type: 3}
-  m_PrefabInstance: {fileID: 1951117386}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &258582757
 GameObject:
   m_ObjectHideFlags: 0
@@ -809,14 +803,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 422218013}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.27092746, y: -0.27904314, z: 0.08239152, w: 0.91757554}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 32.9, y: -33.83, z: 0}
 --- !u!114 &422218016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3286,22 +3280,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2101435022, guid: bef4d85d927c4ce42b18436dd2582a1e, type: 3}
-      propertyPath: enable
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2101435022, guid: bef4d85d927c4ce42b18436dd2582a1e, type: 3}
-      propertyPath: cuttingObject
-      value: 
-      objectReference: {fileID: 249343311}
-    - target: {fileID: 2101435022, guid: bef4d85d927c4ce42b18436dd2582a1e, type: 3}
-      propertyPath: cuttingPosition
-      value: 
-      objectReference: {fileID: 249343311}
-    - target: {fileID: 2101435022, guid: bef4d85d927c4ce42b18436dd2582a1e, type: 3}
-      propertyPath: crossSectionMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 3b9e29f5acf7cdb4997dc49cbc72edd4, type: 2}
     - target: {fileID: 7760698837102679112, guid: bef4d85d927c4ce42b18436dd2582a1e,
         type: 3}
       propertyPath: m_RootOrder
