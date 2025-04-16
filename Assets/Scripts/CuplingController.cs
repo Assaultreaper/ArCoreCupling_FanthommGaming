@@ -18,14 +18,11 @@ public class CuplingController : MonoBehaviour
     private Coroutine movementCoroutine;
     private Coroutine handleCoroutine;
 
-    [Header("Target Material")]
-    public Material targetMaterial;
-    public bool xrayOn = false;
+    [SerializeField] private Material targetMaterial;
+    [SerializeField] private float originalZCutoff = -999f;  // Default for when X-ray is OFF
+    [SerializeField] private float xrayZCutoff = 0.01f;      // Shallow slice for X-ray effect
 
-    [Header("World Cutoff Values")]
-    public float cutoffX = -999f;
-    public float cutoffY = -1f;
-    public float cutoffZ = -999f;
+    private bool isXrayOn = false;
 
     [Header("Spring Compression Settings")]
     public Transform SpringTransform;         // The spring to compress
@@ -60,29 +57,27 @@ public class CuplingController : MonoBehaviour
         UIManager.Instance.GasLeak.AddListener(TriggerGas);
         UIManager.Instance.Xray.AddListener(ToggleXray);
     }
-
     public void ToggleXray()
     {
-        if (targetMaterial != null)
+        if (targetMaterial == null)
         {
-            float currentZ = targetMaterial.GetFloat("_CutoffZ");
-
-            if (Mathf.Approximately(currentZ, 0.01f))
-            {
-                // Turn off X-ray
-                targetMaterial.SetFloat("_CutoffZ", cutoffZ);
-            }
-            else
-            {
-                // Turn on X-ray (slice at a shallow depth)
-                targetMaterial.SetFloat("_CutoffZ", 0.01f);
-            }
+            Debug.LogWarning("Target material is not assigned!");
+            return;
         }
+
+        isXrayOn = !isXrayOn;
+
+        float newZ = isXrayOn ? xrayZCutoff : originalZCutoff;
+        targetMaterial.SetFloat("_CutoffZ", newZ);
+
+        Debug.Log(isXrayOn ?
+            $"X-ray On: Applying shallow Z cutoff ({newZ})." :
+            $"X-ray Off: Restoring original Z cutoff ({newZ}).");
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        // Check for collision with a target (e.g., the ground or another object)
+
         if (collision.relativeVelocity.magnitude > 0.1f)
         {
             // Calculate compression based on collision

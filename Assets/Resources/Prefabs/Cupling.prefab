@@ -5243,7 +5243,7 @@ MonoBehaviour:
   rotationSpeed: 90
   gasEffect: {fileID: 163925974}
   targetMaterial: {fileID: 2100000, guid: 14006d6cc02ad66429ea3c74b0953049, type: 2}
-  xrayOn: 0
+  xrayOn: 1
   cutoffX: -999
   cutoffY: -999
   cutoffZ: -999
