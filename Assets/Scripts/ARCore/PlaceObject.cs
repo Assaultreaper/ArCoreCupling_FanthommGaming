@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using EnhancedTouch = UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(ARRaycastManager), typeof(ARPlaneManager))]
 public class PlaceObject : MonoBehaviour
@@ -13,7 +14,7 @@ public class PlaceObject : MonoBehaviour
     private ARPlaneManager arPlaneManager;
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
-    private GameObject placedObject; // 👈 reference to current object
+    private GameObject placedObject;
 
     private void Awake()
     {
@@ -41,6 +42,9 @@ public class PlaceObject : MonoBehaviour
         if (finger.index != 0)
             return;
 
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(finger.index))
+            return;
+
         if (arRaycastManager.Raycast(finger.currentTouch.screenPosition, hits, TrackableType.PlaneWithinPolygon))
         {
             foreach (ARRaycastHit hit in hits)
@@ -48,28 +52,29 @@ public class PlaceObject : MonoBehaviour
                 Pose pose = hit.pose;
                 ARPlane plane = arPlaneManager.GetPlane(hit.trackableId);
 
-                // Destroy previously placed object
                 if (placedObject != null)
                     Destroy(placedObject);
 
-                // Spawn with identity rotation first
                 placedObject = Instantiate(Prefab, pose.position, Quaternion.identity);
 
                 if (plane.alignment == PlaneAlignment.Vertical)
                 {
-                    Vector3 wallNormal = pose.rotation * Vector3.back;
-                    Quaternion targetRotation = Quaternion.LookRotation(-wallNormal);
+                    Vector3 cameraPosition = Camera.main.transform.position;
+                    Vector3 lookDirection = (cameraPosition - pose.position).normalized;
+                    lookDirection.y = 0f; // Keep upright
+
+                    Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
                     placedObject.transform.rotation = targetRotation;
 
                     float offsetDistance = 0.01f;
-                    placedObject.transform.position += wallNormal * offsetDistance;
+                    placedObject.transform.position += placedObject.transform.forward * offsetDistance;
                 }
                 else
                 {
                     placedObject.transform.rotation = pose.rotation;
                 }
 
-                break; // only handle the first hit
+                break; // Only use first valid hit
             }
         }
     }
