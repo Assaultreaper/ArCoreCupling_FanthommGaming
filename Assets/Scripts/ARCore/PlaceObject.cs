@@ -67,7 +67,7 @@ public class PlaceObject : MonoBehaviour
                     placedObject.transform.rotation = targetRotation;
 
                     float offsetDistance = 0.01f;
-                    placedObject.transform.position += placedObject.transform.forward * offsetDistance;
+                    placedObject.transform.position = placedObject.transform.forward * offsetDistance;
                 }
                 else
                 {

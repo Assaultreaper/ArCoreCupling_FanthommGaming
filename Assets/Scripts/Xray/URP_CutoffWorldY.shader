@@ -1,4 +1,4 @@
-Shader "Custom/ARCore_ZOffset_MetallicRoughness_Normal"
+Shader "Custom/ARCore_CameraCulling_MetallicRoughness_Normal"
 {
     Properties
     {
@@ -7,7 +7,7 @@ Shader "Custom/ARCore_ZOffset_MetallicRoughness_Normal"
         _RoughnessMap ("Roughness (Inverted Smoothness)", 2D) = "black" {}
         _MetallicMap ("Metallic Map", 2D) = "black" {}
         _Color ("Color Tint", Color) = (1,1,1,1)
-        _CutoffZ ("Z Cutoff (X-ray)", Float) = -999.0
+        _CullPercent ("Cull Percent (0-1)", Range(0, 1)) = 0.4
     }
 
     SubShader
@@ -16,7 +16,7 @@ Shader "Custom/ARCore_ZOffset_MetallicRoughness_Normal"
         LOD 200
 
         CGPROGRAM
-        #pragma surface surf Standard fullforwardshadows
+        #pragma surface surf Standard fullforwardshadows addshadow
         #pragma target 3.0
 
         sampler2D _MainTex;
@@ -24,21 +24,25 @@ Shader "Custom/ARCore_ZOffset_MetallicRoughness_Normal"
         sampler2D _RoughnessMap;
         sampler2D _MetallicMap;
         fixed4 _Color;
-        float _CutoffZ;
+        float _CullPercent;
 
         struct Input
         {
             float2 uv_MainTex;
-            float3 worldPos;
             float2 uv_NormalMap;
             float2 uv_RoughnessMap;
             float2 uv_MetallicMap;
+            float3 viewDir;
+            float3 worldPos;
         };
 
         void surf(Input IN, inout SurfaceOutputStandard o)
         {
-            // X-Ray Z-Cutoff (in world space)
-            if (IN.worldPos.z < _CutoffZ)
+            float3 toCamera = normalize(_WorldSpaceCameraPos - IN.worldPos);
+            float visibility = saturate(dot(toCamera, float3(0, 0, 1))); // alignment with forward
+
+            // Cull pixels when camera looks too much from front
+            if (visibility > _CullPercent)
                 discard;
 
             // Base color and tint
@@ -49,7 +53,7 @@ Shader "Custom/ARCore_ZOffset_MetallicRoughness_Normal"
             fixed metallicValue = tex2D(_MetallicMap, IN.uv_MetallicMap).r;
             o.Metallic = saturate(metallicValue);
 
-            // Invert roughness to get smoothness (Unity expects smoothness)
+            // Invert roughness to get smoothness
             fixed roughnessValue = tex2D(_RoughnessMap, IN.uv_RoughnessMap).r;
             o.Smoothness = 1.0 - saturate(roughnessValue);
 

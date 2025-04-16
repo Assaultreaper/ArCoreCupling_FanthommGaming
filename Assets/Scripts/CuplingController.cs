@@ -67,21 +67,20 @@ public class CuplingController : MonoBehaviour
 
         isXrayOn = !isXrayOn;
 
-        float newZ = isXrayOn ? xrayZCutoff : originalZCutoff;
-        targetMaterial.SetFloat("_CutoffZ", newZ);
+        float newCullPercent = isXrayOn ? 0.5f : 0.0f; // 0.4 = 40% culling, 0 = fully visible
+        targetMaterial.SetFloat("_CullPercent", newCullPercent);
 
         Debug.Log(isXrayOn ?
-            $"X-ray On: Applying shallow Z cutoff ({newZ})." :
-            $"X-ray Off: Restoring original Z cutoff ({newZ}).");
+            $"X-ray On: Culling {newCullPercent * 100f}% based on camera view." :
+            "X-ray Off: Full mesh visible.");
     }
+
 
     private void OnCollisionEnter(Collision collision)
     {
 
         if (collision.relativeVelocity.magnitude > 0.1f)
         {
-            // Calculate compression based on collision
-            // Assuming collision along the Z axis of the Pusher
             float compressionAmount = Mathf.Clamp(collision.relativeVelocity.magnitude * 0.1f, 0f, 1f); // You can tweak the multiplier here
             UpdateSpringCompression(compressionAmount);
         }
@@ -89,25 +88,19 @@ public class CuplingController : MonoBehaviour
 
     private void UpdateSpringCompression(float compressionAmount)
     {
-        // Calculate new compression scale for the spring
-        currentCompression = Mathf.Lerp(0f, 1f, compressionAmount); // Adjust based on your desired compression range
+       
+        currentCompression = Mathf.Lerp(0f, 1f, compressionAmount); 
 
-        // Apply to Spring (scale the Z-axis)
         Vector3 newScale = SpringTransform.localScale;
         newScale.z = Mathf.Lerp(SpringOriginalZ, SpringCompressedZ, currentCompression);
         SpringTransform.localScale = newScale;
 
-        // Adjust the Pusher position based on compression
         if (Pusher != null)
-        {
-            // Optionally adjust Pusher’s position based on compression
+        { 
             Pusher.localPosition = Vector3.Lerp(PusherOriginalPos, PusherCompressedPos, currentCompression);
         }
-
-        // Adjust the SpringSurface position based on the Pusher's movement
         if (SpringSurface != null && Pusher != null)
         {
-            // Move SpringSurface relative to the compression without adding extra offsets
             SpringSurface.localPosition = SpringSurfaceOriginalPos + SpringTransform.forward * (newScale.z - SpringOriginalZ);
         }
     }
