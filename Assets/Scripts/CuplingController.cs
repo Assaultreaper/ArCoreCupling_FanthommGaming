@@ -1,5 +1,4 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class CuplingController : MonoBehaviour
@@ -63,8 +62,9 @@ public class CuplingController : MonoBehaviour
             {
                 GasOff.SetActive(true);
                 GasOff2.SetActive(true);
-                currentOffset += scrollSpeed * Time.deltaTime;
-                flowMaterial.SetTextureOffset("_MainTex", currentOffset);
+                Vector4 tiling = flowMaterial.GetVector("_Tiling");
+                tiling.w += Time.deltaTime * 0.1f;
+                flowMaterial.SetVector("_Tiling", tiling);
             }
         }
         else

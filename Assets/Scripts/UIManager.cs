@@ -1,13 +1,10 @@
-using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Rendering;
 using UnityEngine.UI;
-using static UIManager;
 
 [DisallowMultipleComponent]
 public class UIManager : MonoBehaviour
@@ -84,6 +81,7 @@ public class UIManager : MonoBehaviour
     {
         targetImage.gameObject.SetActive(true);
         StartCoroutine(PlayTextureAnimation());
+        FindAnyObjectByType<PlaceObject>().ResetPlacement();
         StartCoroutine(InitializePanels(PanelTypes.MainMenu));
     }
     public void startSimulation()
