@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CuplingController : MonoBehaviour
@@ -8,109 +9,124 @@ public class CuplingController : MonoBehaviour
     private Vector3 PrevPos;
     public Transform Handle;
     public Vector3 TargetPosition;
-    private bool Connectable = false;
 
-    public float moveSpeed = 1f; // Units per second
-    public float rotationSpeed = 90f; // Degrees per second
-    public ParticleSystem gasEffect;
+    public float moveSpeed = 1f;
+    public float rotationSpeed = 90f;
 
     private bool isConnected = false;
     private Coroutine movementCoroutine;
     private Coroutine handleCoroutine;
 
     [SerializeField] private Material targetMaterial;
-    [SerializeField] private float originalZCutoff = -999f;  // Default for when X-ray is OFF
-    [SerializeField] private float xrayZCutoff = 0.01f;      // Shallow slice for X-ray effect
 
     private bool isXrayOn = false;
+    public float xrayCutoff = 0.0f;
+    public float xrayOffCutoff = -100.0f;
 
     [Header("Spring Compression Settings")]
-    public Transform SpringTransform;         // The spring to compress
-    public Transform SpringSurface;           // Optional surface visually tied to spring
-    public Transform Pusher;                  // The object that pushes the spring
-    public Vector3 PusherCompressedPos;       // Target position when compressed
-    private Vector3 PusherOriginalPos;        // Captured at Start
+    public Transform SpringTransform;
+    public Transform SpringSurface;
+    public Transform Pusher;
+    public Vector3 PusherCompressedPos;
+    private Vector3 PusherOriginalPos;
     public float SpringCompressedZ = 0.05f;
     public float SpringOriginalZ = 0.136411f;
 
-    private float currentCompression = 0f;     // Tracks the current compression value
-    private Vector3 SpringSurfaceOriginalPos; // To store the original position of the SpringSurface
+    private float currentCompression = 0f;
+    private Vector3 SpringSurfaceOriginalPos;
+
+    public bool isFlowing = false;
+    public Vector2 scrollSpeed = new Vector2(0f, 0.2f);
+    private Vector2 currentOffset = Vector2.zero;
+
+    [SerializeField] private Material flowMaterial;
+    [SerializeField] private bool visualizeGas =  false; 
+    [SerializeField] private GameObject GasOff;
+    [SerializeField] private GameObject GasOff2;
 
     void Start()
     {
-        if (gasEffect != null)
-            gasEffect.Stop();
-
         InitializeControls();
+
         if (Pusher != null)
             PusherOriginalPos = Pusher.localPosition;
 
-        // Store the original position of the SpringSurface
         if (SpringSurface != null)
             SpringSurfaceOriginalPos = SpringSurface.localPosition;
     }
 
+    void Update()
+    {
+        if (visualizeGas == true)
+        {
+            if (isFlowing && flowMaterial != null)
+            {
+                GasOff.SetActive(true);
+                GasOff2.SetActive(true);
+                currentOffset += scrollSpeed * Time.deltaTime;
+                flowMaterial.SetTextureOffset("_MainTex", currentOffset);
+            }
+        }
+        else
+        {
+            GasOff.SetActive(false);
+            GasOff2.SetActive(false);
+        }
+    }
+
     private void InitializeControls()
     {
-        UIManager.Instance.ConnectCupling.AddListener(Connect);
-        UIManager.Instance.DisconnectCupling.AddListener(Disconnect);
-        UIManager.Instance.GasLeak.AddListener(TriggerGas);
+        UIManager.Instance.ConnectCupling.AddListener(OnConnectRequested);
+        UIManager.Instance.DisconnectCupling.AddListener(OnDisconnectRequested);
+        UIManager.Instance.GasLeak.AddListener(ToggleFlow);
         UIManager.Instance.Xray.AddListener(ToggleXray);
+        UIManager.Instance.MoveTowards.AddListener(MoveLeft);
+        UIManager.Instance.MoveAway.AddListener(MoveRight);
     }
+
     public void ToggleXray()
     {
-        if (targetMaterial == null)
-        {
-            Debug.LogWarning("Target material is not assigned!");
-            return;
-        }
+        if (targetMaterial == null) return;
 
         isXrayOn = !isXrayOn;
-
-        float newCullPercent = isXrayOn ? 0.5f : 0.0f; // 0.4 = 40% culling, 0 = fully visible
-        targetMaterial.SetFloat("_CullPercent", newCullPercent);
-
-        Debug.Log(isXrayOn ?
-            $"X-ray On: Culling {newCullPercent * 100f}% based on camera view." :
-            "X-ray Off: Full mesh visible.");
+        float cutoffValue = isXrayOn ? xrayCutoff : xrayOffCutoff;
+        targetMaterial.SetFloat("_Cutoffx", cutoffValue);
     }
-
 
     private void OnCollisionEnter(Collision collision)
     {
-
         if (collision.relativeVelocity.magnitude > 0.1f)
         {
-            float compressionAmount = Mathf.Clamp(collision.relativeVelocity.magnitude * 0.1f, 0f, 1f); // You can tweak the multiplier here
+            float compressionAmount = Mathf.Clamp(collision.relativeVelocity.magnitude * 0.1f, 0f, 1f);
             UpdateSpringCompression(compressionAmount);
         }
     }
 
     private void UpdateSpringCompression(float compressionAmount)
     {
-       
-        currentCompression = Mathf.Lerp(0f, 1f, compressionAmount); 
+        currentCompression = Mathf.Lerp(0f, 1f, compressionAmount);
 
         Vector3 newScale = SpringTransform.localScale;
         newScale.z = Mathf.Lerp(SpringOriginalZ, SpringCompressedZ, currentCompression);
         SpringTransform.localScale = newScale;
 
         if (Pusher != null)
-        { 
-            Pusher.localPosition = Vector3.Lerp(PusherOriginalPos, PusherCompressedPos, currentCompression);
-        }
+            Pusher.localPosition = Vector3.Lerp(PusherOriginalPos, PusherCompressedPos, compressionAmount);
+
         if (SpringSurface != null && Pusher != null)
-        {
-            SpringSurface.localPosition = SpringSurfaceOriginalPos + SpringTransform.forward * (newScale.z - SpringOriginalZ);
-        }
+            SpringSurface.localPosition = SpringSurfaceOriginalPos + Vector3.forward * (newScale.z - SpringOriginalZ);
     }
 
     public void MoveLeft()
     {
         if (!isConnected && movementCoroutine == null)
         {
-            Vector3 newTarget = TargetPosition;
-            movementCoroutine = StartCoroutine(MoveToTarget(newTarget));
+            PrevPos = MovingCupling.localPosition;
+
+            Vector3 currentPos = MovingCupling.localPosition;
+            Vector3 newTarget = new Vector3(currentPos.x, currentPos.y, TargetPosition.z);
+
+            movementCoroutine = StartCoroutine(MoveToTarget(newTarget, () => GasOff.SetActive(true)));
         }
     }
 
@@ -118,60 +134,56 @@ public class CuplingController : MonoBehaviour
     {
         if (!isConnected && movementCoroutine == null)
         {
-            Vector3 newTarget = new Vector3(0.236585811f, -0.860000014f, 2.61000061f);
-            movementCoroutine = StartCoroutine(MoveToTarget(newTarget));
+            GasOff.SetActive(false);
+            movementCoroutine = StartCoroutine(MoveToTarget(PrevPos));
         }
     }
 
-    public void Connect()
+    private void OnConnectRequested()
     {
         if (!isConnected)
         {
-            if (movementCoroutine == null)
-                PrevPos = MovingCupling.transform.localPosition;
-
-            movementCoroutine = StartCoroutine(MoveToTarget(TargetPosition, () =>
-            {
-                isConnected = true;
-                RotateHandle(TriggerGas);
-            }));
+            Connect();
         }
-        else
+    }
+
+    private void OnDisconnectRequested()
+    {
+        if (isConnected)
         {
             Disconnect();
         }
     }
 
+    public void Connect()
+    {
+        if (!isConnected && handleCoroutine == null)
+        {
+                isConnected = true;
+                isFlowing = true;
+                RotateHandle();
+        }
+    }
+
     public void Disconnect()
     {
-        if (isConnected && movementCoroutine == null)
+        if (isConnected && handleCoroutine == null)
         {
-            TriggerGas();
             isConnected = false;
-            Vector3 newTarget = PrevPos;
-            RotateHandle(() =>
-            {
-                movementCoroutine = StartCoroutine(MoveToTarget(newTarget));
-                ResetSpringSurfacePosition(); // Reset the SpringSurface position after disconnect
-            });
+            isFlowing = false;
+            RotateHandle();
+            ResetSpringSurfacePosition();
         }
     }
 
     private void ResetSpringSurfacePosition()
     {
-        // Reset the SpringSurface to its original position
         if (SpringSurface != null)
-        {
             SpringSurface.localPosition = SpringSurfaceOriginalPos;
-        }
 
-        // Optionally reset other components (like Spring Transform or Pusher) to their original positions if needed
         if (Pusher != null)
-        {
             Pusher.localPosition = PusherOriginalPos;
-        }
 
-        // Reset spring scale
         if (SpringTransform != null)
         {
             Vector3 scale = SpringTransform.localScale;
@@ -189,14 +201,15 @@ public class CuplingController : MonoBehaviour
         }
     }
 
-    public void TriggerGas()
+    public void ToggleFlow()
     {
-        if (gasEffect != null)
+        if (visualizeGas)
         {
-            if (gasEffect.isPlaying)
-                gasEffect.Stop();
-            else
-                gasEffect.Play();
+            visualizeGas = false;
+        }
+        else
+        {
+            visualizeGas = true;
         }
     }
 
@@ -237,25 +250,18 @@ public class CuplingController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / (angle / rotationSpeed));
 
-            // Rotate Handle
             Handle.localEulerAngles = Vector3.Lerp(startEuler, endEuler, t);
 
-            // Spring Compression
             if (SpringTransform != null)
             {
                 Vector3 newScale = SpringTransform.localScale;
                 newScale.z = Mathf.Lerp(startSpringZ, targetSpringZ, t);
                 SpringTransform.localScale = newScale;
 
-                // Adjust spring surface position based on Pusher's movement
                 if (SpringSurface != null && Pusher != null)
-                {
-                    // Move SpringSurface relative to Pusher's movement
-                    SpringSurface.localPosition = Pusher.localPosition + SpringTransform.forward * newScale.z;
-                }
+                    SpringSurface.localPosition = SpringSurfaceOriginalPos + Vector3.forward * (newScale.z - SpringOriginalZ);
             }
 
-            // Move Pusher
             if (Pusher != null)
                 Pusher.localPosition = Vector3.Lerp(startPusherPos, targetPusherPos, t);
 
@@ -264,7 +270,6 @@ public class CuplingController : MonoBehaviour
 
         Handle.localEulerAngles = endEuler;
 
-        // Snap to final values
         if (SpringTransform != null)
         {
             Vector3 finalScale = SpringTransform.localScale;

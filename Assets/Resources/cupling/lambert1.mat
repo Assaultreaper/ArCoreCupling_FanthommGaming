@@ -20,6 +20,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _BaseColor:
+        m_Texture: {fileID: 2800000, guid: bb6654ff37e543042a2b3f3c2111cf64, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -48,6 +52,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: bb6654ff37e543042a2b3f3c2111cf64, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Metallic:
+        m_Texture: {fileID: 2800000, guid: f9f4a16af5cf93e4886d8c63ba439a11, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -68,6 +76,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Roughness:
+        m_Texture: {fileID: 2800000, guid: b1437b03bafe0de44a65f7cb5d87cb45, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _RoughnessMap:
         m_Texture: {fileID: 2800000, guid: b1437b03bafe0de44a65f7cb5d87cb45, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -75,10 +87,17 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
+    - _CullDistance: 0.4
+    - _CullLocalZ: 10000
+    - _CullPercent: 0
+    - _CullZ: 0
     - _Cutoff: 0.5
-    - _CutoffZ: -999
+    - _CutoffZ: 182.33
+    - _Cutoffx: 0
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _FadeRange: 0.1
+    - _FadeSize: 0.1
     - _GlossMapScale: 1
     - _Glossiness: 0
     - _GlossyReflections: 1
@@ -86,6 +105,7 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
+    - _SectionZ: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

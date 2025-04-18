@@ -35,6 +35,8 @@ public class UIManager : MonoBehaviour
 
     [HideInInspector]public UnityEvent ConnectCupling;
     [HideInInspector]public UnityEvent DisconnectCupling;
+    [HideInInspector] public UnityEvent MoveTowards;
+    [HideInInspector] public UnityEvent MoveAway;
     [HideInInspector]public UnityEvent GasLeak;
     [HideInInspector] public UnityEvent Xray;
 
@@ -120,6 +122,16 @@ public class UIManager : MonoBehaviour
     public void EnableXray()
     {
         Xray?.Invoke();
+    }
+
+    public void MoveTowardsCupling()
+    {
+        MoveTowards?.Invoke();
+    }
+
+    public void MoveAwayCupling()
+    {
+        MoveAway?.Invoke();
     }
 
     IEnumerator PlayTextureAnimation()

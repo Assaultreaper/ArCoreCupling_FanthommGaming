@@ -15,6 +15,7 @@ public class PlaceObject : MonoBehaviour
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
     private GameObject placedObject;
+    private bool hasPlaced = false;
 
     private void Awake()
     {
@@ -39,6 +40,9 @@ public class PlaceObject : MonoBehaviour
 
     private void FingerDown(EnhancedTouch.Finger finger)
     {
+        if (hasPlaced)
+            return;
+
         if (finger.index != 0)
             return;
 
@@ -52,22 +56,17 @@ public class PlaceObject : MonoBehaviour
                 Pose pose = hit.pose;
                 ARPlane plane = arPlaneManager.GetPlane(hit.trackableId);
 
-                if (placedObject != null)
-                    Destroy(placedObject);
-
-                placedObject = Instantiate(Prefab, pose.position, Quaternion.identity);
+                placedObject = Instantiate(Prefab, pose.position, Prefab.transform.rotation);
+                hasPlaced = true;
 
                 if (plane.alignment == PlaneAlignment.Vertical)
                 {
-                    Vector3 cameraPosition = Camera.main.transform.position;
-                    Vector3 lookDirection = (cameraPosition - pose.position).normalized;
-                    lookDirection.y = 0f; // Keep upright
-
-                    Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+                    Quaternion rotationOffset = Prefab.transform.rotation;
+                    Quaternion targetRotation = Quaternion.LookRotation(-plane.transform.forward) * rotationOffset;
                     placedObject.transform.rotation = targetRotation;
 
                     float offsetDistance = 0.01f;
-                    placedObject.transform.position = placedObject.transform.forward * offsetDistance;
+                    placedObject.transform.position = pose.position + placedObject.transform.forward * offsetDistance;
                 }
                 else
                 {
@@ -77,5 +76,16 @@ public class PlaceObject : MonoBehaviour
                 break; // Only use first valid hit
             }
         }
+    }
+
+    public void ResetPlacement()
+    {
+        if (placedObject != null)
+        {
+            Destroy(placedObject);
+            placedObject = null;
+        }
+
+        hasPlaced = false;
     }
 }
