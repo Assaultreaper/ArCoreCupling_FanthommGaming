@@ -94,7 +94,7 @@ Material:
     - _CullZ: 0
     - _Cutoff: 0.5
     - _CutoffZ: 182.33
-    - _Cutoffx: -1
+    - _Cutoffx: -2.01
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _FadeRange: 0.1

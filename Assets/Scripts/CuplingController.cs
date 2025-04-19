@@ -52,6 +52,8 @@ public class CuplingController : MonoBehaviour
 
         if (SpringSurface != null)
             SpringSurfaceOriginalPos = SpringSurface.localPosition;
+
+        targetMaterial.SetFloat("_Cutoffx", xrayOffCutoff);
     }
 
     void Update()
